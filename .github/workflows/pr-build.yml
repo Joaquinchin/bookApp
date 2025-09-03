@@ -1,36 +1,54 @@
-name: PR – Build Check no anda el pr si no buildea
+name: PR – Build Check
+
+# DESCRIPCIÓN DEL WORKFLOW:
+# Este workflow verifica que la aplicación se pueda compilar exitosamente
+# antes de permitir el merge de un Pull Request.
+#
+# QUÉ HACE:
+# 1. Ejecuta build en múltiples versiones de Node.js (18 y 20)
+# 2. Instala dependencias con cache optimizado
+# 3. Compila la aplicación Next.js para producción
+# 4. Comenta resultados automáticamente en el PR
+# 5. Bloquea el merge si el build falla
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main, master]  # Se ejecuta cuando se abre/actualiza PR hacia main
 
 permissions:
-  contents: read
-  pull-requests: write  # ← Necesario para comentar en PRs
+  contents: read              # Permiso para leer el código del repositorio
+  pull-requests: write        # Permiso para comentar en Pull Requests
 
 jobs:
   build:
     name: Build (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: false  # Continúa con otras versiones aunque una falle
       matrix:
-        node: [18, 20] #mismo job dos veces con diferentes versiones de node
+        node: [18, 20]  # Prueba en Node.js 18 LTS y 20 LTS para compatibilidad
 
     steps:
+      # PASO 1: Descargar código fuente del Pull Request
       - name: Checkout
-        uses: actions/checkout@v4 # descargamos el code
+        uses: actions/checkout@v4
 
-      - name: Setup Node # configuramos la version de node y cacheamos para qeu se aceleren los prox build
-        uses: actions/setup-node@v4 # 
+      # PASO 2: Configurar versión específica de Node.js con cache de npm
+      # El cache accelera builds subsecuentes al reutilizar dependencias
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
+          cache: npm  # Cache automático de node_modules basado en package-lock.json
 
+      # PASO 3: Instalar dependencias exactas basadas en package-lock.json
+      # npm ci es más rápido y confiable que npm install para CI/CD
       - name: Install
         run: npm ci
 
-      - name: Cache Next build cache # cacheamos la build de next para que sea mas rapido 
+      # PASO 4: Cache específico de Next.js build 
+      # Reutiliza archivos compilados entre builds para mayor velocidad
+      - name: Cache Next build cache
         uses: actions/cache@v4
         with:
           path: .next/cache
@@ -39,13 +57,15 @@ jobs:
             next-${{ runner.os }}-${{ matrix.node }}-
             next-
 
-      - name: Build # hacemos la build y vemos que todo funcione ok
+      # PASO 5: Compilar aplicación para producción
+      # Este es el paso crítico - si falla, el PR no puede mergearse
+      - name: Build
         env:
-          NODE_ENV: production
-          NODE_OPTIONS: --max_old_space_size=4096 
+          NODE_ENV: production                    # Compilación optimizada
+          NODE_OPTIONS: --max_old_space_size=4096 # Más memoria para builds grandes
         run: npm run build
 
-      #Comentario cuando el build es exitoso para Node 20
+      # PASO 6: Comentar éxito en PR (solo para Node 20 para evitar duplicados)
       - name: Comment PR Build Success
         if: success() && matrix.node == 20
         uses: actions/github-script@v7
@@ -57,12 +77,13 @@ jobs:
               repo: context.repo.repo,
               body: '**Build exitoso!**\n\n' +
                     '- Compilación exitosa en Node.js 18 y 20\n' +
-                    '- Todas las dependencias instaladas correctamente\n' +
-                    '- Aplicación lista para producción\n\n' +
-                    'Tu código está listo para merge!'
+                    '- todas las dependencias instaladas correctamente\n' +
+                    '- Aplicación lista para producción\n' +
+                    '- Cache optimizado para builds futuros\n\n' +
+                    '**Tu código está listo para merge!** 🎉'
             })
             
-      # Comentario cuando el build falla (solo para Node 20)
+      # PASO 7: Comentar error en PR (solo para Node 20 para evitar duplicados)
       - name: Comment PR Build Failure
         if: failure() && matrix.node == 20
         uses: actions/github-script@v7
@@ -74,9 +95,10 @@ jobs:
               repo: context.repo.repo,
               body: '**Build falló!**\n\n' +
                     '**Posibles causas:**\n' +
-                    '- Error de sintaxis TypeScript\n' +
-                    '- Dependencia faltante o incompatible\n' +
-                    '- Error en la configuración de Next.js\n\n' +
-                    '[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n' +
-                    '**Tip:** Ejecuta `npm run build` localmente para reproducir el error.'
+                    '- Error de sintaxis en TypeScript/JavaScript\n' +
+                    '- Dependencia faltante o incompatible en package.json\n' +
+                    '- Error en configuración de Next.js\n' +
+                    '- Problema con variables de entorno\n' +
+                    '- Error de tipos en TypeScript\n\n' +
+                    '**[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' 
             })
