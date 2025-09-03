@@ -98,7 +98,7 @@ describe("Review actions", () => {
       expect(reviews[0].text).toBe("Amazing book!");
       expect(reviews[0].votes).toBe(0);
       expect(reviews[0].volumeId).toBe("volume-1");
-      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews-volume-1");
+      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews:volume-1");
     });
 
     it("should handle multiple reviews for same volume", async () => {
@@ -132,7 +132,7 @@ describe("Review actions", () => {
 
     it("should call revalidateTag with correct parameter", async () => {
       await addReview("test-volume-123", 4, "Good book");
-      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews-test-volume-123");
+      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews:test-volume-123");
     });
   });
 
@@ -153,7 +153,7 @@ describe("Review actions", () => {
 
       const updatedReviews = await getReviews("volume-1");
       expect(updatedReviews[0].votes).toBe(1);
-      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews-volume-1");
+      expect(mockRevalidateTag).toHaveBeenCalledWith("reviews:volume-1");
     });
 
     it("should decrease votes when voting down", async () => {

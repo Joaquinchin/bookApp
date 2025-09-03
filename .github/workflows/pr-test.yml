@@ -24,7 +24,7 @@ jobs:
       - name: Install
         run: npm ci
       - name: Run tests
-        run: npm test -- --ci
+        run: npm run test:ci
         
       # Comentario de éxito
       - name: Comment PR Success

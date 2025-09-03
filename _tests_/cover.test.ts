@@ -23,13 +23,13 @@ describe("cover utilities", () => {
   });
 
   describe("pickCover", () => {
-    it("should pick large image first", () => {
+    it("should pick large image when size is specified", () => {
       const images = {
         large: "https://example.com/large.jpg",
         medium: "https://example.com/medium.jpg",
         thumbnail: "https://example.com/thumb.jpg"
       };
-      const result = pickCover(images);
+      const result = pickCover(images, 'large');
       expect(result).toBe("https://example.com/large.jpg");
     });
 
