@@ -22,3 +22,12 @@ export function pickCover(imageLinks?: ImageLinks, size: 'small' | 'medium' | 'l
       return imageLinks.medium || imageLinks.thumbnail || imageLinks.small || "";
   }
 }
+
+export function normalizeCover(url?: string | null): string {
+  if (!url) {
+    return "";
+  }
+  
+  // Convert HTTP to HTTPS for security
+  return url.replace(/^http:/, 'https:');
+}
