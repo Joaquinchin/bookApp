@@ -75,11 +75,11 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**✅ Build exitoso!**\n\n' +
-                    '- 🏗️ Compilación exitosa en Node.js 18 y 20\n' +
-                    '- 📦 Todas las dependencias instaladas correctamente\n' +
-                    '- 🚀 Aplicación lista para producción\n' +
-                    '- ⚡ Cache optimizado para builds futuros\n\n' +
+              body: '**Build exitoso!**\n\n' +
+                    '- Compilación exitosa en Node.js 18 y 20\n' +
+                    '- todas las dependencias instaladas correctamente\n' +
+                    '- Aplicación lista para producción\n' +
+                    '- Cache optimizado para builds futuros\n\n' +
                     '**Tu código está listo para merge!** 🎉'
             })
             
@@ -93,13 +93,12 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**❌ Build falló!**\n\n' +
-                    '**🔍 Posibles causas:**\n' +
+              body: '**Build falló!**\n\n' +
+                    '**Posibles causas:**\n' +
                     '- Error de sintaxis en TypeScript/JavaScript\n' +
                     '- Dependencia faltante o incompatible en package.json\n' +
                     '- Error en configuración de Next.js\n' +
                     '- Problema con variables de entorno\n' +
                     '- Error de tipos en TypeScript\n\n' +
-                    '**📊 [Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' +
-                    '**💡 Tip:** Ejecuta `npm run build` localmente para reproducir el error.'
+                    '**[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' 
             })

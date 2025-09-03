@@ -56,12 +56,12 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**✅ Tests exitosos!**\n\n' +
-                    '🧪 **Suite de tests completada:**\n' +
-                    '- ⚛️ Componentes React (BookCard, BookDetails, Pagination, etc.)\n' +
-                    '- 🎬 Server Actions (reviews, votes, search)\n' +
-                    '- 🔧 Utilidades (Google Books API, image handling)\n' +
-                    '- 🔗 Tests de integración entre componentes\n\n' +
+              body: '**Tests exitosos!**\n\n' +
+                    '**Suite de tests completada:**\n' +
+                    '- Componentes React (BookCard, BookDetails, Pagination, etc.)\n' +
+                    '- Server Actions (reviews, votes, search)\n' +
+                    '- Utilidades (Google Books API, image handling)\n' +
+                    '- Tests de integración entre componentes\n\n' +
                     '**Todos los tests unitarios pasaron correctamente** 🎉'
             })
             
@@ -75,15 +75,15 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**❌ Tests fallaron!**\n\n' +
-                    '**🔍 Posibles causas:**\n' +
+              body: '**Tests fallaron!**\n\n' +
+                    '**Posibles causas:**\n' +
                     '- Cambio en comportamiento de componente\n' +
                     '- Test desactualizado después de refactor\n' +
                     '- Nuevo código sin tests correspondientes\n' +
                     '- Error en mock de dependencias externas\n' +
                     '- Problema con setup de testing environment\n\n' +
-                    '**📊 [Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' +
-                    '**💡 Tip:** Ejecuta `npm test` localmente para reproducir los errores.\n' +
-                    '**🔧 Debug:** Usa `npm run test:watch` para development iterativo.'
+                    '**[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' +
+                    '**Tip:** Ejecuta `npm test` localmente para reproducir los errores.\n' +
+                    '**Debug:** Usa `npm run test:watch` para development iterativo.'
             })
         

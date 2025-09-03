@@ -1,214 +1,207 @@
-# 📚 BookApp - Plataforma de Descubrimiento y Reseñas de Libros
+# BookApp - Plataforma de Descubrimiento y Reseñas de Libros
 
-Una aplicación Next.js para descubrir libros, ver detalles y escribir reseñas usando la API de Google Books.
+Aplicación Next.js para buscar libros y escribir reseñas usando la API de Google Books.
 
-## 🚀 Demo en Vivo
+## URL de la Aplicación Deployada
 
-**URL de la aplicación:** `[AGREGAR_URL_CUANDO_SE_DEPLOYE]`
+**Producción**: https://book-app-xi-ten.vercel.app
 
-## ✨ Características
+## Descripción
 
-- 🔍 Búsqueda de libros usando Google Books API
-- 📖 Vista detallada de cada libro
-- ⭐ Sistema de reseñas y calificaciones
-- 📱 Diseño responsive con Tailwind CSS
-- 🏗️ Arquitectura escalable con TypeScript
-- 🧪 Tests unitarios con Vitest
-- 🐳 Dockerizado para deployment
-- ⚡ CI/CD con GitHub Actions
+Esta aplicación permite a los usuarios:
+- Buscar libros usando la API de Google Books
+- Ver detalles de cada libro
+- Escribir y leer reseñas
+- Votar en reseñas existentes
 
-## 🛠️ Tecnologías
+## Tecnologías
 
-- **Frontend:** Next.js 14, TypeScript, Tailwind CSS
-- **API:** Google Books API
-- **Testing:** Vitest, Testing Library
-- **Deployment:** Docker, Vercel
-- **CI/CD:** GitHub Actions
+- Next.js 14 con TypeScript
+- React 18
+- Tailwind CSS
+- Vitest para testing
+- Docker para containerización
+- GitHub Actions para CI/CD
+- Vercel para deployment
 
-## 📋 Prerrequisitos
+## Instalación y Deploy Local
 
-- Node.js 18+ 
-- npm o yarn
-- Docker (opcional, para containerización)
-- Google Books API Key
+### Prerrequisitos
+- Node.js 18 o superior
+- npm
+- API Key de Google Books
 
-## 🏃‍♂️ Instalación y Desarrollo Local
+### Pasos
 
-### 1. Clonar el repositorio
+1. Clonar repositorio:
 ```bash
-git clone https://github.com/Joaquinchin/bookApp.git
+git clone https://github.com/joaquinchin/bookApp.git
 cd bookApp
 ```
 
-### 2. Instalar dependencias
+2. Instalar dependencias:
 ```bash
 npm install
 ```
 
-### 3. Configurar variables de entorno
+3. Configurar variables de entorno:
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Editar `.env` y agregar tu Google Books API Key:
-```env
+Editar `.env.local` con tu API key:
+```
 NEXT_PUBLIC_GOOGLE_API_KEY=tu_api_key_aqui
 ```
 
-### 4. Ejecutar en modo desarrollo
+4. Ejecutar en desarrollo:
 ```bash
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:3000`
+La aplicación estará en http://localhost:3000
 
-## 🧪 Testing
+## Variables de Entorno Necesarias
 
-```bash
-# Ejecutar todos los tests
-npm test
+### Para desarrollo local:
+- `NEXT_PUBLIC_GOOGLE_API_KEY`: API key de Google Books (requerida)
+- `NEXT_PUBLIC_API_URL`: URL base de la aplicación (opcional)
 
-# Ejecutar tests en modo watch
-npm run test:watch
+### Para producción:
+- `NEXT_PUBLIC_GOOGLE_API_KEY`: API key de Google Books
+- `NODE_ENV=production`
+- `PORT=3000`
 
-# Ejecutar tests con coverage
-npm run test:coverage
-```
+### Obtener Google Books API Key:
+1. Ir a Google Cloud Console
+2. Crear un proyecto nuevo
+3. Habilitar Books API
+4. Crear credenciales (API Key)
+5. Copiar la key al archivo .env.local
 
-## 🐳 Docker
+## GitHub Actions
 
-### Construir imagen
+### Workflows Configurados
+
+#### 1. Build Check (pr-build.yml)
+- **Trigger**: Pull Requests hacia main
+- **Función**: Verifica que la aplicación compile correctamente
+- **Pasos**:
+  - Instala dependencias en Node.js 18 y 20
+  - Ejecuta npm run build
+  - Cachea dependencias para acelerar builds futuros
+  - Comenta resultados en el PR
+  - Bloquea merge si el build falla
+
+#### 2. Test Check (pr-test.yml)
+- **Trigger**: Pull Requests hacia main
+- **Función**: Ejecuta suite de tests unitarios
+- **Pasos**:
+  - Instala dependencias
+  - Ejecuta npm run test:ci con Vitest
+  - Reporta resultados en el PR
+  - Bloquea merge si algún test falla
+
+#### 3. Docker Build & Publish (docker-publish.yml)
+- **Trigger**: Push a rama main
+- **Función**: Construye y publica imagen Docker
+- **Pasos**:
+  - Construye imagen optimizada con multi-stage build
+  - Publica en GitHub Container Registry (ghcr.io)
+  - Genera tags: latest, v{version}, {commit-hash}
+  - Utiliza cache de Docker layers para optimización
+
+### Cache Implementado
+- **npm**: Cache de node_modules basado en package-lock.json
+- **Next.js build**: Cache de .next/cache para builds más rápidos
+- **Docker layers**: Cache de layers entre builds Docker
+
+### Secrets Utilizados
+- `GITHUB_TOKEN`: Token automático para publicar en GitHub Container Registry
+
+## Instrucciones Docker
+
+### Construir imagen local:
 ```bash
 docker build -t bookapp .
 ```
 
-### Ejecutar container
+### Ejecutar container:
 ```bash
-docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_api_key bookapp
+docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key bookapp
 ```
 
-### Usar con docker-compose (próximamente)
+### Usar imagen publicada:
 ```bash
-docker-compose up -d
-```
-
-## 🚀 Deployment
-
-### Variables de Entorno para Producción
-
-Asegurate de configurar estas variables en tu servicio de hosting:
-
-- `NEXT_PUBLIC_GOOGLE_API_KEY`: Tu API key de Google Books
-- `NEXT_PUBLIC_APP_URL`: URL base de tu aplicación
-- `NODE_ENV`: `production`
-
-### Deployment en Vercel
-
-1. Conecta tu repositorio a Vercel
-2. Configura las variables de entorno
-3. Deploy automático en cada push a `main`
-
-### Deployment con Docker
-
-La imagen se construye automáticamente y se publica en GitHub Container Registry (ghcr.io) cuando se mergea código a `main`.
-
-```bash
-# Usar imagen pre-construida
 docker pull ghcr.io/joaquinchin/bookapp:latest
-docker run -p 3000:3000 ghcr.io/joaquinchin/bookapp:latest
+docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key ghcr.io/joaquinchin/bookapp:latest
 ```
 
-## ⚙️ GitHub Actions (CI/CD)
+## Testing
 
-### Workflows Configurados
+Ejecutar tests:
+```bash
+npm test          # Tests en modo interactivo
+npm run test:ci   # Tests para CI/CD
+```
 
-1. **PR Build Check** (`.github/workflows/pr-build.yml`)
-   - Se ejecuta en cada Pull Request
-   - Instala dependencias y buildea la aplicación
-   - Falla el PR si hay errores de compilación
-   - Comenta en el PR con resultados
+Los tests cubren:
+- Componentes React
+- Server Actions
+- Utilidades y helpers
+- Integración con APIs
 
-2. **PR Test Check** (`.github/workflows/pr-test.yml`)
-   - Se ejecuta en cada Pull Request
-   - Ejecuta todos los tests unitarios
-   - Falla el PR si hay tests fallidos
-   - Comenta en el PR con resultados
-
-3. **Docker Build & Publish** (`.github/workflows/docker-publish.yml`)
-   - Se ejecuta cuando se mergea a `main`
-   - Construye imagen Docker optimizada
-   - Publica en GitHub Container Registry
-   - Genera tags: `latest`, `v{version}`, `{commit-hash}`
-
-### Estado de los Builds
-
-[![Build Status](https://github.com/Joaquinchin/bookApp/workflows/PR%20–%20Build%20Check/badge.svg)](https://github.com/Joaquinchin/bookApp/actions)
-[![Test Status](https://github.com/Joaquinchin/bookApp/workflows/PR%20–%20Test%20Check/badge.svg)](https://github.com/Joaquinchin/bookApp/actions)
-[![Docker](https://github.com/Joaquinchin/bookApp/workflows/Docker%20–%20Build%20&%20Publish%20(GHCR)/badge.svg)](https://github.com/Joaquinchin/bookApp/actions)
-
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 bookApp/
 ├── src/
-│   ├── app/                 # App Router (Next.js 13+)
-│   │   ├── page.tsx         # Página principal
-│   │   ├── book/[id]/       # Página de detalle del libro
-│   │   └── search/          # Página de búsqueda
-│   ├── components/          # Componentes reutilizables
-│   └── lib/                 # Utilidades y helpers
+│   ├── app/                 # App Router Next.js
+│   ├── components/          # Componentes React
+│   └── lib/                 # Utilidades y APIs
 ├── _tests_/                 # Tests unitarios
-├── public/                  # Assets estáticos
 ├── .github/workflows/       # GitHub Actions
-├── Dockerfile               # Configuración Docker
-├── next.config.ts           # Configuración Next.js
-└── README.md
+├── public/                  # Assets estáticos
+├── Dockerfile              # Configuración Docker
+└── package.json            # Dependencias
 ```
 
-## 🤝 Contribuir
+## Deployment
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-caracteristica`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva característica'`)
-4. Push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Abre un Pull Request
+### Opción 1: Vercel (Recomendada)
 
-## 📝 Scripts Disponibles
+Vercel es la plataforma recomendada para aplicaciones Next.js por su simplicidad y rendimiento.
 
-```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build para producción
-npm run start        # Servidor de producción
-npm run lint         # Linter
-npm run test         # Tests unitarios
-npm run test:watch   # Tests en modo watch
-npm run type-check   # Verificación de tipos TypeScript
-```
+#### Pasos para deployar en Vercel:
 
-## 🔧 Configuración Avanzada
+1. **Crear cuenta en Vercel**
+   - Ir a https://vercel.com
+   - Registrarse con tu cuenta de GitHub
 
-### Optimización de Performance
-- Imágenes optimizadas con Next.js Image
-- Lazy loading automático
-- Bundle splitting
-- Cache de builds en CI/CD
+2. **Importar proyecto**
+   - Click en "New Project"
+   - Seleccionar tu repositorio bookApp
+   - Vercel detectará automáticamente que es Next.js
 
-### Seguridad
-- Variables de entorno seguras
-- Headers de seguridad configurados
-- Rate limiting (próximamente)
+3. **Configurar variables de entorno**
+   - En la página de configuración, agregar:
+   - `NEXT_PUBLIC_GOOGLE_API_KEY` = tu_api_key_de_google_books
 
-## 📄 Licencia
+4. **Deploy automático**
+   - Vercel buildea y deploya automáticamente
+   - Te dará una URL como: https://bookapp-abc123.vercel.app
 
-MIT
-
-## 👥 Autor
-
-**Joaquin Chin** - [GitHub](https://github.com/Joaquinchin)
-
----
-
-⭐ Si te gusta este proyecto, danos una estrella en GitHub!
+5. **Deploy continuo**
+   - Cada push a main actualizará automáticamente el deployment
+   - Los PRs crean preview deployments automáticamente
 
 
-probando cambios para PR.
+## Demostración GitHub Actions
+
+Los workflows están configurados y funcionando:
+- Pull Requests activan build y test checks automáticamente
+- Push a main activa build y publicación de Docker
+- Todos los workflows incluyen cache para optimización
+- Comentarios automáticos en PRs con resultados
+- Bloqueo de merge si hay fallos
+
