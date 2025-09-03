@@ -49,6 +49,6 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: **Tests fallaron!** Por favor revisa los errores y arregla los tests antes de mergear. \n\n [Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+              body: '**Tests fallaron!** Por favor revisa los errores y arregla los tests antes de mergear.\n\n[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
             })
         
