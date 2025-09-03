@@ -40,6 +40,7 @@ jobs:
       - name: Build & Push
         run: |
           IMAGE=ghcr.io/${{ github.repository_owner }}/bookapp
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           SHA=${{ github.sha }}
           VER=${{ steps.meta.outputs.version }}
 
@@ -56,7 +57,7 @@ jobs:
           script: |
             const sha = '${{ github.sha }}'.substring(0, 7);
             const version = '${{ steps.meta.outputs.version }}';
-            const image = 'ghcr.io/${{ github.repository_owner }}/bookapp';
+            const image = 'ghcr.io/${{ github.repository_owner }}/bookapp'.toLowerCase();
             
             // Si es un PR, comenta ahí, sino busca PRs relacionados
             if (context.eventName === 'pull_request') {
