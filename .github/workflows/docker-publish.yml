@@ -67,19 +67,29 @@ jobs:
 
       # PASO 5: Construir y publicar imagen Docker con múltiples tags
       # Se crean 3 tags diferentes para cubrir distintos casos de uso
-      # Utiliza cache de layers para optimizar tiempo de build
+      # Utiliza cache manual con buildx para compatibilidad con conversión de nombres
       - name: Build & Push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/bookapp:latest
-            ghcr.io/${{ github.repository_owner }}/bookapp:v${{ steps.meta.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/bookapp:${{ github.sha }}
-          # Configuración de cache para builds más rápidos
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        run: |
+          # Preparar nombre de imagen (debe estar en minúsculas para GHCR)
+          IMAGE=ghcr.io/${{ github.repository_owner }}/bookapp
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          
+          # Obtener información para tags
+          SHA=${{ github.sha }}           # Hash del commit actual
+          VER=${{ steps.meta.outputs.version }}  # Versión desde package.json
+
+          # CONSTRUIR imagen con múltiples tags y cache:
+          # - latest: Para producción y deployments automáticos
+          # - v{version}: Para releases específicas (ej: v1.2.3) 
+          # - {commit-sha}: Para trazabilidad de cada cambio
+          docker buildx build \
+            --push \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            -t $IMAGE:latest \
+            -t $IMAGE:v$VER \
+            -t $IMAGE:$SHA \
+            .
           
       # Mover cache para próximo build
       - name: Move cache
