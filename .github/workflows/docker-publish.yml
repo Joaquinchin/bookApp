@@ -1,14 +1,26 @@
 name: Docker – Build & Publish (GHCR)
 
+# DESCRIPCIÓN DEL WORKFLOW:
+# Este workflow automatiza la creación y publicación de imágenes Docker
+# para la aplicación BookApp cuando se hace push a la rama principal.
+# 
+# QUÉ HACE:
+# 1. Construye una imagen Docker optimizada usando multi-stage build
+# 2. Publica la imagen en GitHub Container Registry (ghcr.io)
+# 3. Genera múltiples tags para diferentes propósitos
+# 4. Proporciona feedback automático en PRs cuando corresponde
+
 on:
   push:
-    branches: [main, master]
+    branches: [main, master]  # Solo se ejecuta en push a ramas principales
 
 permissions:
-  contents: read
-  packages: write   #publicar en GHCR
-  pull-requests: write  # para comentar si viene de PR
+  contents: read              # Permiso para leer el código del repositorio
+  packages: write            # Permiso para escribir en GitHub Container Registry
+  pull-requests: write       # Permiso para comentar en Pull Requests
 
+# Configuración de concurrencia: 
+# Cancela builds anteriores si hay un nuevo push para ahorrar recursos
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -19,37 +31,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # PASO 1: Descargar código fuente del repositorio
       - name: Checkout
         uses: actions/checkout@v4
         
-      # (Opcional) obtener versión desde package.json para tag vX.Y.Z
+      # PASO 2: Extraer versión del package.json para crear tags semánticos
+      # Esto permite tener imágenes versionadas (ej: v0.1.0)
       - name: Read version
         id: meta
         run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
 
+      # PASO 3: Configurar Docker Buildx (constructor avanzado de Docker)
+      # Buildx permite features avanzadas como multi-platform builds y cache
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # PASO 3.5: Cache de layers de Docker para builds más rápidos
+      # Reutiliza layers entre builds para reducir tiempo de construcción
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # PASO 4: Autenticarse en GitHub Container Registry
+      # Usa el token automático de GitHub para publicar imágenes
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.actor }}           # Usuario que hizo el push
+          password: ${{ secrets.GITHUB_TOKEN }}   # Token automático de GitHub
 
+      # PASO 5: Construir y publicar imagen Docker con múltiples tags
+      # Se crean 3 tags diferentes para cubrir distintos casos de uso
+      # Utiliza cache de layers para optimizar tiempo de build
       - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/bookapp:latest
+            ghcr.io/${{ github.repository_owner }}/bookapp:v${{ steps.meta.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/bookapp:${{ github.sha }}
+          # Configuración de cache para builds más rápidos
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          
+      # Mover cache para próximo build
+      - name: Move cache
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/bookapp
-          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
-          SHA=${{ github.sha }}
-          VER=${{ steps.meta.outputs.version }}
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-          docker build -t $IMAGE:latest -t $IMAGE:v$VER -t $IMAGE:$SHA .
-          docker push $IMAGE:latest
-          docker push $IMAGE:v$VER
-          docker push $IMAGE:$SHA
-
-      # Comentario de éxito en Docker build
+      # PASO 6: Comentar éxito en Pull Request (si aplica)
+      # Proporciona feedback automático con información de las imágenes creadas
       - name: Comment Docker Success
         if: success()
         uses: actions/github-script@v7
@@ -59,26 +98,27 @@ jobs:
             const version = '${{ steps.meta.outputs.version }}';
             const image = 'ghcr.io/${{ github.repository_owner }}/bookapp'.toLowerCase();
             
-            // Si es un PR, comenta ahí, sino busca PRs relacionados
+            // Solo comentar si el trigger viene de un Pull Request
             if (context.eventName === 'pull_request') {
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `**Docker imagen creada exitosamente!** \n\n` +
-                      `**Imágenes disponibles:**\n` +
-                      `- \`${image}:latest\`\n` +
-                      `- \`${image}:v${version}\`\n` +
-                      `- \`${image}:${sha}\`\n\n` +
-                      `**Para ejecutar localmente:**\n` +
+                body: `**🐳 Docker imagen creada exitosamente!** \n\n` +
+                      `**📦 Imágenes disponibles:**\n` +
+                      `- \`${image}:latest\` ← Producción\n` +
+                      `- \`${image}:v${version}\` ← Versión específica\n` +
+                      `- \`${image}:${sha}\` ← Commit específico\n\n` +
+                      `**🚀 Para ejecutar localmente:**\n` +
                       `\`\`\`bash\n` +
                       `docker run -p 3000:3000 ${image}:latest\n` +
                       `\`\`\`\n\n` +
-                      `[Ver en GitHub Container Registry](https://ghcr.io/${{ github.repository_owner }}/bookapp)`
+                      `[📋 Ver en GitHub Container Registry](https://github.com/${{ github.repository_owner }}/bookApp/pkgs/container/bookapp)`
               });
             }
             
-      #  Comentario de error en Docker build  
+      # PASO 7: Comentar error en Pull Request (si aplica)  
+      # Proporciona información de debugging cuando el build falla
       - name: Comment Docker Failure
         if: failure()
         uses: actions/github-script@v7
@@ -89,12 +129,13 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `**Docker build falló!** \n\n` +
-                      `**Posibles causas:**\n` +
+                body: `**❌ Docker build falló!** \n\n` +
+                      `**🔍 Posibles causas:**\n` +
                       `- Error en el Dockerfile\n` +
-                      `- Problema con las dependencias en el container\n` +
+                      `- Problema con dependencias en el container\n` +
+                      `- Falla en \`npm run build\` dentro del container\n` +
                       `- Error de permisos en GitHub Container Registry\n\n` +
-                      `[Ver logs detallados](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n` +
-                      `**Tip:** Ejecuta \`docker build . -t test\` localmente para reproducir el error.`
+                      `**📊 [Ver logs detallados](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n` +
+                      `**💡 Tip:** Ejecuta \`docker build . -t test-build\` localmente para reproducir el error.`
               });
             }
