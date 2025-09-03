@@ -10,8 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest --config vitest.config.ts",
-    "test:watch": "vitest --watch --config vitest.config.ts"
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --watch --config vitest.config.ts",
+    "test:ci": "vitest run --config vitest.config.ts --reporter=verbose"
   },
   "dependencies": {
     "next": "^15.5.2",
