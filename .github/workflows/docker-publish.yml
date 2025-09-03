@@ -114,16 +114,16 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `**🐳 Docker imagen creada exitosamente!** \n\n` +
-                      `**📦 Imágenes disponibles:**\n` +
+                body: `**Docker imagen creada exitosamente!** \n\n` +
+                      `**Imágenes disponibles:**\n` +
                       `- \`${image}:latest\` ← Producción\n` +
                       `- \`${image}:v${version}\` ← Versión específica\n` +
                       `- \`${image}:${sha}\` ← Commit específico\n\n` +
-                      `**🚀 Para ejecutar localmente:**\n` +
+                      `** Para ejecutar localmente:**\n` +
                       `\`\`\`bash\n` +
                       `docker run -p 3000:3000 ${image}:latest\n` +
                       `\`\`\`\n\n` +
-                      `[📋 Ver en GitHub Container Registry](https://github.com/${{ github.repository_owner }}/bookApp/pkgs/container/bookapp)`
+                      `[Ver en GitHub Container Registry](https://github.com/${{ github.repository_owner }}/bookApp/pkgs/container/bookapp)`
               });
             }
             
@@ -139,13 +139,12 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `**❌ Docker build falló!** \n\n` +
-                      `**🔍 Posibles causas:**\n` +
+                body: `** Docker build falló!** \n\n` +
+                      `**Posibles causas:**\n` +
                       `- Error en el Dockerfile\n` +
                       `- Problema con dependencias en el container\n` +
                       `- Falla en \`npm run build\` dentro del container\n` +
                       `- Error de permisos en GitHub Container Registry\n\n` +
-                      `**📊 [Ver logs detallados](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n` +
-                      `**💡 Tip:** Ejecuta \`docker build . -t test-build\` localmente para reproducir el error.`
+                      `**[Ver logs detallados](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n` 
               });
             }
