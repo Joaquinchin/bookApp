@@ -6,7 +6,12 @@ import ReviewList from "../../../components/ReviewList";
 import BookDetails from "../../../components/BookDetails";
 import BackButton from "../../../components/BackButton";
 
-export default async function BookPage({ params, searchParams }: { params: { id: string }, searchParams: { q?: string; start?: string }; }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string; start?: string }>;
+}
+
+export default async function BookPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const { q = "", start = "" } = await searchParams;
   

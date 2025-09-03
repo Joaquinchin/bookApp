@@ -3,13 +3,16 @@ import { searchBooks } from "@/lib/googleBooks";
 import BookCard from "../../components/BookCard";
 import Pagination from "../../components/Pagination";
 
+interface SearchPageProps {
+  searchParams: Promise<{ q?: string; start?: string }>;
+}
+
 export default async function SearchPage({
   searchParams,
-}: {
-  searchParams: { q?: string; start?: string };
-}) {
-  const q = (searchParams.q ?? "").trim();
-  const startIndex = Math.max(0, Number(searchParams.start ?? "0"));
+}: SearchPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const q = (resolvedSearchParams.q ?? "").trim();
+  const startIndex = Math.max(0, Number(resolvedSearchParams.start ?? "0"));
 
   if (!q) {
     return (

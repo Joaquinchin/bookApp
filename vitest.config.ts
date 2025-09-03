@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 export default defineConfig({
+  // @ts-ignore - Ignorar conflictos de tipos entre versiones de Vite
   plugins: [react()],
   test: {
     environment: 'jsdom',
