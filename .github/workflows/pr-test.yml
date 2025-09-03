@@ -1,32 +1,52 @@
 name: PR – Test Check
-# Corremos los tests y  PR rojo si algo falla
+
+# DESCRIPCIÓN DEL WORKFLOW:
+# Este workflow ejecuta la suite completa de tests unitarios y de integración
+# para asegurar que los cambios en el PR no rompan funcionalidad existente.
+#
+# QUÉ HACE:
+# 1. Ejecuta todos los tests con Vitest en modo CI
+# 2. Verifica componentes React, utilities y server actions
+# 3. Genera reportes de coverage (cobertura de código)
+# 4. Comenta resultados automáticamente en el PR
+# 5. Bloquea el merge si algún test falla
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main, master]  # Se ejecuta en PRs hacia main
 
 permissions:
-  contents: read
+  contents: read              # Permiso para leer código
+  pull-requests: write        # Permiso para comentar resultados
 
 jobs:
   test:
     name: Unit tests
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: write  #  Permiso para comentar en PR
+      contents: read              # Leer código fuente
+      pull-requests: write        # Comentar en PR
+      
     steps:
+      # PASO 1: Descargar código fuente del Pull Request
       - uses: actions/checkout@v4
+      
+      # PASO 2: Configurar Node.js 20 LTS con cache optimizado
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          
+      # PASO 3: Instalar dependencias exactas (incluyendo devDependencies para testing)
       - name: Install
         run: npm ci
+        
+      # PASO 4: Ejecutar suite completa de tests con Vitest
+      # Incluye tests de: componentes, actions, utilities, API integration
       - name: Run tests
         run: npm run test:ci
         
-      # Comentario de éxito
+      # PASO 5: Comentar éxito en PR con resumen de tests
       - name: Comment PR Success
         if: success()
         uses: actions/github-script@v7
@@ -36,10 +56,16 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**Tests exitosos!** Todos los tests unitarios pasaron correctamente'
+              body: '**✅ Tests exitosos!**\n\n' +
+                    '🧪 **Suite de tests completada:**\n' +
+                    '- ⚛️ Componentes React (BookCard, BookDetails, Pagination, etc.)\n' +
+                    '- 🎬 Server Actions (reviews, votes, search)\n' +
+                    '- 🔧 Utilidades (Google Books API, image handling)\n' +
+                    '- 🔗 Tests de integración entre componentes\n\n' +
+                    '**Todos los tests unitarios pasaron correctamente** 🎉'
             })
             
-      # Comentario de error
+      # PASO 6: Comentar error en PR con información de debugging
       - name: Comment PR Failure
         if: failure()
         uses: actions/github-script@v7
@@ -49,6 +75,15 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '**Tests fallaron!** Por favor revisa los errores y arregla los tests antes de mergear.\n\n[Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+              body: '**❌ Tests fallaron!**\n\n' +
+                    '**🔍 Posibles causas:**\n' +
+                    '- Cambio en comportamiento de componente\n' +
+                    '- Test desactualizado después de refactor\n' +
+                    '- Nuevo código sin tests correspondientes\n' +
+                    '- Error en mock de dependencias externas\n' +
+                    '- Problema con setup de testing environment\n\n' +
+                    '**📊 [Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n' +
+                    '**💡 Tip:** Ejecuta `npm test` localmente para reproducir los errores.\n' +
+                    '**🔧 Debug:** Usa `npm run test:watch` para development iterativo.'
             })
         
