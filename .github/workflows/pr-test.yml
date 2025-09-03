@@ -1,0 +1,54 @@
+name: PR – Test Check
+# Corremos los tests y  PR rojo si algo falla
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write  #  Permiso para comentar en PR
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Run tests
+        run: npm test -- --ci
+        
+      # Comentario de éxito
+      - name: Comment PR Success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '**Tests exitosos!** Todos los tests unitarios pasaron correctamente'
+            })
+            
+      # Comentario de error
+      - name: Comment PR Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: **Tests fallaron!** Por favor revisa los errores y arregla los tests antes de mergear. \n\n [Ver detalles del error](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+            })
+        
