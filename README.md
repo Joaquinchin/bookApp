@@ -104,12 +104,13 @@ La aplicación estará en http://localhost:3000
 
 #### 3. Docker Build & Publish (docker-publish.yml)
 - **Trigger**: Push a rama main
-- **Función**: Construye y publica imagen Docker
+- **Función**: Construye y publica imagen Docker en Docker Hub
 - **Pasos**:
   - Construye imagen optimizada con multi-stage build
-  - Publica en GitHub Container Registry (ghcr.io)
+  - Publica en Docker Hub (franco2k3/libreria-virtual)
   - Genera tags: latest, v{version}, {commit-hash}
   - Utiliza cache de Docker layers para optimización
+  - Soporte para múltiples arquitecturas (amd64, arm64)
 
 ### Cache Implementado
 - **npm**: Cache de node_modules basado en package-lock.json
@@ -121,21 +122,29 @@ La aplicación estará en http://localhost:3000
 
 ## Instrucciones Docker
 
+### Usar imagen publicada de Docker Hub:
+```bash
+# Descargar y ejecutar la última versión
+docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key franco2k3/libreria-virtual:latest
+
+# O usar una versión específica
+docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key franco2k3/libreria-virtual:1.0.0
+```
+
 ### Construir imagen local:
 ```bash
 docker build -t bookapp .
 ```
 
-### Ejecutar container:
+### Ejecutar container local:
 ```bash
 docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key bookapp
 ```
 
-### Usar imagen publicada:
-```bash
-docker pull ghcr.io/joaquinchin/bookapp:latest
-docker run -p 3000:3000 -e NEXT_PUBLIC_GOOGLE_API_KEY=tu_key ghcr.io/joaquinchin/bookapp:latest
-```
+**Tags disponibles en Docker Hub:**
+- `latest`: Versión más reciente
+- `1.0.0`, `1.0.1`, etc.: Versiones específicas
+- `main`: Última versión de la rama principal
 
 ## Testing
 

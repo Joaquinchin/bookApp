@@ -1,53 +1,50 @@
-name: Docker – Build & Publish (GHCR)
+name: Docker – Build & Publish (Docker Hub)
 
 # DESCRIPCIÓN DEL WORKFLOW:
-# Este workflow automatiza la creación y publicación de imágenes Docker
-# para la aplicación BookApp cuando se hace push a la rama principal.
-# 
+# Este workflow construye una imagen Docker optimizada de la aplicación
+# y la publica en Docker Hub cuando se hace push a la rama principal.
+#
 # QUÉ HACE:
-# 1. Construye una imagen Docker optimizada usando multi-stage build
-# 2. Publica la imagen en GitHub Container Registry (ghcr.io)
-# 3. Genera múltiples tags para diferentes propósitos
-# 4. Proporciona feedback automático en PRs cuando corresponde
+# 1. Autentica con Docker Hub usando secrets
+# 2. Construye imagen Docker multi-stage optimizada
+# 3. Crea múltiples tags (latest, versión, commit hash)
+# 4. Publica imagen en Docker Hub registry
+# 5. Implementa cache para acelerar builds futuros
+# 6. Comenta resultados en PRs automáticamente
 
 on:
   push:
-    branches: [main, master]  # Solo se ejecuta en push a ramas principales
+    branches: [main, master]  # Se ejecuta cuando se mergea código a main
 
 permissions:
-  contents: read              # Permiso para leer el código del repositorio
-  packages: write            # Permiso para escribir en GitHub Container Registry
-  pull-requests: write       # Permiso para comentar en Pull Requests
+  contents: read              # Permiso para leer código del repositorio
+  pull-requests: write        # Permiso para comentar en Pull Requests
 
-# Configuración de concurrencia: 
-# Cancela builds anteriores si hay un nuevo push para ahorrar recursos
+# Evita múltiples builds simultáneos del mismo commit
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   docker:
-    name: Build & Push image
+    name: Build & Push to Docker Hub
     runs-on: ubuntu-latest
 
     steps:
       # PASO 1: Descargar código fuente del repositorio
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        
-      # PASO 2: Extraer versión del package.json para crear tags semánticos
-      # Esto permite tener imágenes versionadas (ej: v0.1.0)
+
+      # PASO 2: Extraer versión del package.json para tags semánticos
       - name: Read version
-        id: meta
+        id: version
         run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
 
-      # PASO 3: Configurar Docker Buildx (constructor avanzado de Docker)
-      # Buildx permite features avanzadas como multi-platform builds y cache
+      # PASO 3: Configurar Docker Buildx (builder avanzado con cache)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # PASO 3.5: Cache de layers de Docker para builds más rápidos
-      # Reutiliza layers entre builds para reducir tiempo de construcción
+      # PASO 4: Configurar cache de Docker layers para acelerar builds
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -56,95 +53,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      # PASO 4: Autenticarse en GitHub Container Registry
-      # Usa el token automático de GitHub para publicar imágenes
-      - name: Login to GHCR
+      # PASO 5: Autenticarse en Docker Hub usando secrets
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}           # Usuario que hizo el push
-          password: ${{ secrets.GITHUB_TOKEN }}   # Token automático de GitHub
+          username: ${{ secrets.DOCKER_USERNAME }}    # Username de Docker Hub
+          password: ${{ secrets.DOCKER_PASSWORD }}    # Token de Docker Hub
 
-      # PASO 5: Construir y publicar imagen Docker con múltiples tags
-      # Se crean 3 tags diferentes para cubrir distintos casos de uso
-      # Utiliza cache manual con buildx para compatibilidad con conversión de nombres
-      - name: Build & Push
-        run: |
-          # Preparar nombre de imagen (debe estar en minúsculas para GHCR)
-          IMAGE=ghcr.io/${{ github.repository_owner }}/bookapp
-          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
-          
-          # Obtener información para tags
-          SHA=${{ github.sha }}           # Hash del commit actual
-          VER=${{ steps.meta.outputs.version }}  # Versión desde package.json
-
-          # CONSTRUIR imagen con múltiples tags y cache:
-          # - latest: Para producción y deployments automáticos
-          # - v{version}: Para releases específicas (ej: v1.2.3) 
-          # - {commit-sha}: Para trazabilidad de cada cambio
-          docker buildx build \
-            --push \
-            --cache-from type=local,src=/tmp/.buildx-cache \
-            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
-            -t $IMAGE:latest \
-            -t $IMAGE:v$VER \
-            -t $IMAGE:$SHA \
-            .
-          
-      # Mover cache para próximo build
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      # PASO 6: Comentar éxito en Pull Request (si aplica)
-      # Proporciona feedback automático con información de las imágenes creadas
-      - name: Comment Docker Success
-        if: success()
-        uses: actions/github-script@v7
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          script: |
-            const sha = '${{ github.sha }}'.substring(0, 7);
-            const version = '${{ steps.meta.outputs.version }}';
-            const image = 'ghcr.io/${{ github.repository_owner }}/bookapp'.toLowerCase();
-            
-            // Solo comentar si el trigger viene de un Pull Request
-            if (context.eventName === 'pull_request') {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `**Docker imagen creada exitosamente!** \n\n` +
-                      `**Imágenes disponibles:**\n` +
-                      `- \`${image}:latest\` ← Producción\n` +
-                      `- \`${image}:v${version}\` ← Versión específica\n` +
-                      `- \`${image}:${sha}\` ← Commit específico\n\n` +
-                      `** Para ejecutar localmente:**\n` +
-                      `\`\`\`bash\n` +
-                      `docker run -p 3000:3000 ${image}:latest\n` +
-                      `\`\`\`\n\n` +
-                      `[Ver en GitHub Container Registry](https://github.com/${{ github.repository_owner }}/bookApp/pkgs/container/bookapp)`
-              });
-            }
-            
-      # PASO 7: Comentar error en Pull Request (si aplica)  
-      # Proporciona información de debugging cuando el build falla
-      - name: Comment Docker Failure
-        if: failure()
-        uses: actions/github-script@v7
+          images: franco2k3/libreria-virtual
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
         with:
-          script: |
-            if (context.eventName === 'pull_request') {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `** Docker build falló!** \n\n` +
-                      `**Posibles causas:**\n` +
-                      `- Error en el Dockerfile\n` +
-                      `- Problema con dependencias en el container\n` +
-                      `- Falla en \`npm run build\` dentro del container\n` +
-                      `- Error de permisos en GitHub Container Registry\n\n` +
-                      `**[Ver logs detallados](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**\n\n` 
-              });
-            }
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
