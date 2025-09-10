@@ -7,6 +7,7 @@ export interface IUser extends Document {
   email: string
   password: string
   name: string
+  favorites: { volumeId: string; title: string; author?: string; addedAt: Date }[]
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
@@ -33,6 +34,23 @@ const UserSchema = new Schema<IUser>({
     minlength: [2, 'Nombre debe tener al menos 2 caracteres'],
     maxlength: [53, 'Nombre no puede exceder 53 caracteres']
   },
+    favorites: [{
+    volumeId: {
+      type: String,
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    author: {
+      type: String
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true, // Agrega createdAt y updatedAt automáticamente
 })
