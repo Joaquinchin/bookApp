@@ -10,11 +10,8 @@ interface ImageLinks {
 
 export function pickCover(imageLinks?: ImageLinks, size: 'small' | 'medium' | 'large' = 'large'): string {
   if (!imageLinks) {
-    console.log('❌ No imageLinks disponible')
     return "";
   }
-
-  console.log('🖼️ ImageLinks disponibles:', imageLinks)
 
   let selectedUrl = "";
 
@@ -30,14 +27,8 @@ export function pickCover(imageLinks?: ImageLinks, size: 'small' | 'medium' | 'l
       selectedUrl = imageLinks.medium || imageLinks.thumbnail || imageLinks.small || imageLinks.large || imageLinks.smallThumbnail || "";
       break;
   }
-
-  console.log('🎯 URL seleccionada:', selectedUrl)
-
-  // ✅ APLICAR normalizeCover automáticamente
+  //APLICAR normalizeCover automáticamente
   const finalUrl = normalizeCover(selectedUrl);
-  
-  console.log('✅ URL final (HTTPS):', finalUrl)
-  
   return finalUrl;
 }
 

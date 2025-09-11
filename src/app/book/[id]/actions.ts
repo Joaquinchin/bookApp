@@ -126,10 +126,15 @@ export async function addReview(volumeId: string, formData: FormData) {
     })
 
     await review.save()
-
-    // Revalidar la página para mostrar la nueva reseña
+    
+    // ✅ REVALIDAR la página específica del libro
     revalidatePath(`/book/${volumeId}`)
     
+    // ✅ También revalidar cualquier página de búsqueda que pueda mostrar este libro
+    revalidatePath('/search')
+    
+    // ✅ OPCIONAL: También revalidar el perfil si muestra las reseñas del usuario
+    revalidatePath('/profile')
     return {
       success: true,
       message: 'Reseña creada exitosamente'

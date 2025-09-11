@@ -11,7 +11,17 @@ export async function middleware(request: NextRequest) {
   const authRoutes = ['/login', '/register']
   
   const token = request.cookies.get('auth-token')?.value
-  const isAuthenticated = token && verifyToken(token)
+  let isAuthenticated = false
+  
+if (token) {
+    try {
+      const payload = verifyToken(token)
+      isAuthenticated = !!payload
+    } catch (error) {
+      console.error('Error verificando token en middleware:', error)
+      isAuthenticated = false
+    }
+  }
   
   // Proteger rutas privadas
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
@@ -37,5 +47,6 @@ export const config = {
     '/favorites/:path*', 
     '/login',         
     '/register'       
-  ]
+  ],
+  runtime: 'nodejs'
 }

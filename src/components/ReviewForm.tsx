@@ -40,7 +40,11 @@ export default function ReviewForm({ volumeId }: { volumeId: string }) {
         setRating(5);
         setError("");
         
-        // ✅ La página se actualiza automáticamente por revalidatePath()
+      // ✅ Pequeño delay para que el servidor procese
+      setTimeout(() => {
+        router.refresh();
+      }, 100);
+      
         
       } catch (err) {
         // ✅ Mostrar error específico
