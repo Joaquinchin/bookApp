@@ -3,6 +3,7 @@
 
 import { useState, useTransition } from "react";
 import { voteReview, deleteReview, updateReview } from "@/app/book/[id]/actions";
+import { useRouter } from "next/navigation";
 
 // Tipo actualizado según el schema de MongoDB
 type Review = {
@@ -18,17 +19,17 @@ type Review = {
 };
 
 export default function ReviewList({ 
-  reviews: initialReviews, 
+  reviews, 
   currentUserId 
 }: { 
   reviews: Review[];
-  currentUserId?: string; // ID del usuario actual (si está logueado)
+  currentUserId?: string; 
 }) {
-  const [reviews, setReviews] = useState(initialReviews);
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ rating: 5, comment: "" });
   const [error, setError] = useState("");
+  const router = useRouter();
 
   // Votar reseña
   async function handleVote(reviewId: string, value: 1 | -1) {
@@ -37,24 +38,15 @@ export default function ReviewList({
       return;
     }
 
-    // Actualización optimista
-    setReviews(prev => prev.map(review => 
-      review._id === reviewId 
-        ? { ...review, votes: review.votes + value }
-        : review
-    ));
-
     startTransition(async () => {
       try {
         await voteReview(reviewId, value);
         setError("");
+        
+        // ✅ REFRESH para mostrar el nuevo voto
+        router.refresh();
+        
       } catch (err) {
-        // Revertir cambio optimista en caso de error
-        setReviews(prev => prev.map(review => 
-          review._id === reviewId 
-            ? { ...review, votes: review.votes - value }
-            : review
-        ));
         setError(err instanceof Error ? err.message : "Error votando reseña");
       }
     });
@@ -69,8 +61,11 @@ export default function ReviewList({
     startTransition(async () => {
       try {
         await deleteReview(reviewId);
-        setReviews(prev => prev.filter(review => review._id !== reviewId));
         setError("");
+        
+        // ✅ REFRESH para ocultar la reseña eliminada
+        router.refresh();
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error eliminando reseña");
       }
@@ -109,20 +104,12 @@ export default function ReviewList({
       try {
         await updateReview(reviewId, formData);
         
-        // Actualizar lista local
-        setReviews(prev => prev.map(review => 
-          review._id === reviewId 
-            ? { 
-                ...review, 
-                rating: editForm.rating, 
-                comment: editForm.comment.trim(),
-                updatedAt: new Date().toISOString()
-              }
-            : review
-        ));
-        
         setEditingId(null);
         setError("");
+        
+        // ✅ REFRESH para mostrar los cambios
+        router.refresh();
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error actualizando reseña");
       }
