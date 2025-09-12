@@ -63,6 +63,9 @@ jobs:
         env:
           NODE_ENV: production                    # Compilación optimizada
           NODE_OPTIONS: --max_old_space_size=4096 # Más memoria para builds grandes
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_GOOGLE_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_API_KEY }}
         run: npm run build
 
       # PASO 6: Comentar éxito en PR (solo para Node 20 para evitar duplicados)
