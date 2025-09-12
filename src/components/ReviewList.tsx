@@ -116,7 +116,7 @@ export default function ReviewList({
     });
   }
 
-  if (!reviews.length) {
+  if (!reviews || !reviews.length) {
     return (
       <div className="text-center py-8">
         <p className="text-neutral-400 text-lg">

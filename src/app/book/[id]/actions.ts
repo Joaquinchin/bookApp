@@ -84,6 +84,7 @@ export async function addReview(volumeId: string, formData: FormData) {
     const user = await getCurrentUser()
     if (!user) {
       redirect('/login')
+      return
     }
 
     // Obtener datos del formulario
@@ -157,6 +158,7 @@ export async function updateReview(reviewId: string, formData: FormData) {
     const user = await getCurrentUser()
     if (!user) {
       redirect('/login')
+      return
     }
 
     // Obtener datos del formulario
@@ -213,6 +215,7 @@ export async function deleteReview(reviewId: string) {
     const user = await getCurrentUser()
     if (!user) {
       redirect('/login')
+      return
     }
 
     await dbConnect()
@@ -259,6 +262,7 @@ export async function voteReview(reviewId: string, value: 1 | -1) {
     const user = await getCurrentUser()
     if (!user) {
       redirect('/login')
+      return
     }
 
     await dbConnect()
