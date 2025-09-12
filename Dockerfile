@@ -12,6 +12,16 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build arguments for environment variables
+ARG MONGODB_URI
+ARG JWT_SECRET
+ARG NEXT_PUBLIC_GOOGLE_API_KEY
+
+# Set environment variables for build
+ENV MONGODB_URI=$MONGODB_URI
+ENV JWT_SECRET=$JWT_SECRET
+ENV NEXT_PUBLIC_GOOGLE_API_KEY=$NEXT_PUBLIC_GOOGLE_API_KEY
+
 # Install all dependencies for build (including devDependencies)
 RUN npm ci
 RUN npm run build
