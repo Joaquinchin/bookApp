@@ -50,7 +50,11 @@ describe('Middleware Authorization', () => {
 
     it('should allow access to /profile with valid token', async () => {
       const validToken = 'valid-jwt-token'
-      const mockUser = { userId: 'user123' }
+      const mockUser = { 
+        userId: 'user123',
+        email: 'test@example.com',
+        name: 'Test User'
+      }
       
       mockVerifyToken.mockReturnValue(mockUser)
       
@@ -65,7 +69,11 @@ describe('Middleware Authorization', () => {
 
     it('should allow access to /favorites with valid token', async () => {
       const validToken = 'valid-jwt-token'
-      const mockUser = { userId: 'user123' }
+      const mockUser = { 
+        userId: 'user123',
+        email: 'test@example.com',
+        name: 'Test User'
+      }
       
       mockVerifyToken.mockReturnValue(mockUser)
       
@@ -109,7 +117,11 @@ describe('Middleware Authorization', () => {
 
     it('should redirect authenticated users away from auth pages', async () => {
       const validToken = 'valid-jwt-token'
-      const mockUser = { userId: 'user123' }
+      const mockUser = { 
+        userId: 'user123',
+        email: 'test@example.com',
+        name: 'Test User'
+      }
       
       mockVerifyToken.mockReturnValue(mockUser)
       
@@ -137,7 +149,11 @@ describe('Middleware Authorization', () => {
 
     it('should allow access to profile edit with valid token', async () => {
       const validToken = 'valid-jwt-token'
-      const mockUser = { userId: 'user123' }
+      const mockUser = { 
+        userId: 'user123',
+        email: 'test@example.com',
+        name: 'Test User'
+      }
       
       mockVerifyToken.mockReturnValue(mockUser)
       
