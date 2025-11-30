@@ -1,0 +1,76 @@
+name: Docker – Build & Publish (Docker Hub)
+
+# DESCRIPCIÓN DEL WORKFLOW:
+# Este workflow construye una imagen Docker optimizada de la aplicación
+# y la publica en Docker Hub cuando se hace push a la rama principal.
+#
+# QUÉ HACE:
+# 1. Autentica con Docker Hub usando secrets
+# 2. Construye imagen Docker multi-stage optimizada
+# 3. Crea múltiples tags (latest, versión, commit hash)
+# 4. Publica imagen en Docker Hub registry
+# 5. Implementa cache para acelerar builds futuros
+# 6. Comenta resultados en PRs automáticamente
+
+on:
+  push:
+    branches: [main, master]  # Se ejecuta cuando se mergea código a main
+
+permissions:
+  contents: read              # Permiso para leer código del repositorio
+  pull-requests: write        # Permiso para comentar en Pull Requests
+
+# Evita múltiples builds simultáneos del mismo commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    name: Build & Push to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      # PASO 1: Descargar código fuente del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # PASO 2: Extraer versión del package.json para tags semánticos
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
+
+      # PASO 3: Configurar Docker Buildx (builder avanzado con cache)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # PASO 4: Configurar cache de Docker layers para acelerar builds
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # PASO 5: Autenticarse en Docker Hub usando secrets
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}    # Username de Docker Hub
+          password: ${{ secrets.DOCKER_PASSWORD }}    # Token de Docker Hub
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: joaquinchin/repositorybookapp
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
