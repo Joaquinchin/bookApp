@@ -1,3 +1,4 @@
+// src/lib/cover.ts
 interface ImageLinks {
   smallThumbnail?: string;
   thumbnail?: string;
@@ -7,20 +8,28 @@ interface ImageLinks {
   extraLarge?: string;
 }
 
-export function pickCover(imageLinks?: ImageLinks, size: 'small' | 'medium' | 'large' = 'medium'): string {
+export function pickCover(imageLinks?: ImageLinks, size: 'small' | 'medium' | 'large' = 'large'): string {
   if (!imageLinks) {
     return "";
   }
 
+  let selectedUrl = "";
+
   switch (size) {
     case 'small':
-      return imageLinks.smallThumbnail || imageLinks.thumbnail || "";
+      selectedUrl = imageLinks.smallThumbnail || imageLinks.thumbnail || "";
+      break;
     case 'large':
-      return imageLinks.large || imageLinks.extraLarge || imageLinks.medium || imageLinks.thumbnail || "";
+      selectedUrl = imageLinks.large || imageLinks.extraLarge || imageLinks.medium || imageLinks.thumbnail || imageLinks.smallThumbnail || "";
+      break;
     case 'medium':
     default:
-      return imageLinks.medium || imageLinks.thumbnail || imageLinks.small || "";
+      selectedUrl = imageLinks.medium || imageLinks.thumbnail || imageLinks.small || imageLinks.large || imageLinks.smallThumbnail || "";
+      break;
   }
+  //APLICAR normalizeCover automáticamente
+  const finalUrl = normalizeCover(selectedUrl);
+  return finalUrl;
 }
 
 export function normalizeCover(url?: string | null): string {
@@ -29,5 +38,9 @@ export function normalizeCover(url?: string | null): string {
   }
   
   // Convert HTTP to HTTPS for security
-  return url.replace(/^http:/, 'https:');
+  const httpsUrl = url.replace(/^http:/, 'https:');
+  
+  // También asegurar que sea la versión más grande disponible
+  // Google Books permite cambiar el parámetro &edge=curl para obtener mejor calidad
+  return httpsUrl.replace(/&edge=curl/g, '') + '&edge=curl';
 }

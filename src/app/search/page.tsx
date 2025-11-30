@@ -51,12 +51,6 @@ export default async function SearchPage({
               )}
             </p>
           </div>
-          <Link
-            href="/"
-            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm md:text-base font-bold text-white shadow hover:bg-indigo-500 transition"
-          >
-            Nueva búsqueda
-          </Link>
         </header>
 
         {/* Sin resultados */}

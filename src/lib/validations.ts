@@ -44,6 +44,12 @@ export const voteSchema = z.object({
   }),
 })
 
+export const favoriteSchema = z.object({
+  volumeId: z.string().min(1, 'Volume ID requerido'),
+  title: z.string().min(1, 'Título requerido'),
+  author: z.string().optional()
+})
+
 // Tipos TypeScript generados automáticamente
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>

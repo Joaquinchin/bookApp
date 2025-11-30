@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "My Book App - Descubre Libros Increíbles",
@@ -23,10 +24,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-neutral-950 text-neutral-100 font-inter">
         <main className="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8 py-8">
+          <Header />
           {children}
         </main>
       </body>
     </html>
   );
 }
-// hola

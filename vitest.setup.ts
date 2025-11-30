@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom'
 import { afterEach, vi } from 'vitest'
 
+// Set environment variables for tests
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-purposes'
+process.env.MONGODB_URI = 'mongodb://test-uri'
+
 // Mock de next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
